@@ -1,0 +1,203 @@
+﻿<html>
+
+<p>From Date: <input type="text" id="datepickerFromNotification"> &nbsp;&nbsp;&nbsp;&nbsp;   To Date: <input type="text" id="datepickerToNotification">
+&nbsp;&nbsp;
+<input type="button" value="Filter" onclick="GetAllFCMCloseOutsNotification()">
+</p>
+<br />
+
+<table border="0" width="100%" cellpadding="2" cellspacing="0" style="border-left-width: 0px; border-right-width: 0px;" id="allFMCProjectItemsNotification"></table>
+
+<div id="dvLoadingN" style="height: 100px;width: 100%;" >  </div>
+
+
+<br /><br />
+<p><br/><input type="button" value=" Print this page " onclick="window.print();"/> </p>
+<head>
+<!--All required JS and CSS references are mapped to root site Site Assets library -->
+
+<style>
+  #dvLoadingN{
+        background: url(//ishare.novachem.com/projects/sites/eng/_layouts/images/gears_an.gif) no-repeat center center;
+        height: 100px;
+        width: 100%;
+    }
+</style>
+
+
+
+<link rel="stylesheet" href="http://ishare.novachem.com/projects/sites/eng/SiteAssets/jquery-ui.css">
+<script type="text/javascript" src="http://ishare.novachem.com/projects/sites/eng/SiteAssets/jquery-1.12.3.min.js"></script>
+<script type="text/javascript" src="http://ishare.novachem.com/projects/sites/eng/SiteAssets/jquery.SPServices.min.js"></script>
+<script src="http://ishare.novachem.com/projects/sites/eng/SiteAssets/jquery-ui.js"></script>
+<script src="http://ishare.novachem.com/projects/sites/eng/SiteAssets/moment.js"></script>
+
+<script language="javascript" type="text/javascript">
+//On DOM load, inititalize date pickers and call the function to fetch the FMC records.
+ $(function() {
+  $('#dvLoadingN').show();
+    $( "#datepickerFromNotification" ).datepicker();
+    $( "#datepickerToNotification" ).datepicker();
+    GetAllFCMCloseOutsNotification();
+  });
+
+function GetAllFCMCloseOutsNotification()
+{
+  $('#dvLoadingN').show();
+$("#allFMCProjectItemsNotification").empty();
+
+var tableHeader ="<tr valign='top'>"+
+"<th class='ms-vh' nowrap='' style='width: 113px; text-align: center; border-bottom-style: solid; border-bottom-width: 1px;'>Notification#</th>"+
+"<th class='ms-vh' nowrap='' style='width: 113px; text-align: center; border-bottom-style: solid; border-bottom-width: 1px;'>Project Name</th>"+
+"	<th class='ms-vh' nowrap='' style='width: 106px; text-align: center; border-bottom-style: solid; border-bottom-width: 1px;'>Date Completed</th>"+
+"	<th class='ms-vh' nowrap='' style='width: 155px; text-align: center; border-bottom-style: solid; border-bottom-width: 1px;'>Site</th>"+
+"	<th class='ms-vh' nowrap='' style='width: 155px; text-align: center; border-bottom-style: solid; border-bottom-width: 1px;'>Unit</th></tr>";
+
+$("#allFMCProjectItemsNotification").append(tableHeader );
+
+//Get Date picker value and pass it to CAML query
+			var dtFrom= $( "#datepickerFromNotification" ).val();
+	     	var partsFrom = dtFrom.split("/");
+            var fromDate= new Date(partsFrom[2], partsFrom[0] - 1, partsFrom[1]);
+
+	     	var dtTo= $( "#datepickerToNotification" ).val();
+	     	var parts = dtTo.split("/");
+            var toDate= new Date(parts[2], parts[0] - 1, parts[1]);
+
+			$('#dvLoadingN').SPServices({
+			    operation: "GetAllSubWebCollection",
+			    webURL: "/projects/sites/eng/",
+			    async:false,
+			    completefunc: function(xData, Status) {
+			    //Query MPL list in the root site and store the information in a variable;
+									     $('#dvLoadingN').SPServices({
+									    operation: "GetListItems",
+									    webURL: "/projects/sites/eng/",
+									    async: false,
+									    listName: "Master Project List",
+									   	CAMLViewFields: "<ViewFields><FieldRef Name='Title' /><FieldRef Name='Site' /><FieldRef Name='Unit' /><FieldRef Name='Project_x0023_' /><FieldRef Name='Notification_x0023_' /></ViewFields>",
+								        completefunc: function (xData, Status) {
+								        $(xData.responseXML).SPFilterNode("z:row").each(function() {
+									       var siteColumn ="";
+									       var unitColumn=""; 
+									       var projectNumber="";
+									       var projectName="";
+									       var projOrNotificationSiteURL ="";
+									       
+									       if($(this).attr("ows_Site")!=null)
+									       {
+									       siteColumn =$(this).attr("ows_Site");
+									       }
+									       else
+									       {
+									       siteColumn ="";
+									       }
+									       if($(this).attr("ows_Unit")!=null)
+									       {
+									       unitColumn=$(this).attr("ows_Unit");
+									       }
+									       else
+									       {
+									       unitColumn ="";
+									       }
+									       if($(this).attr("ows_Title")!=null)
+									       {
+									       projectName=$(this).attr("ows_Title");
+									       }
+									       else
+									       {
+									       projectName="";
+									       }
+								        if(  $(this).attr("ows_Notification_x0023_")!= null )
+								        {   
+								          projOrNotificationSiteURL  =    "http://ishare.novachem.com/projects/sites/eng/" + $(this).attr("ows_Notification_x0023_")+"/";
+								          projectNumber =$(this).attr("ows_Notification_x0023_");
+								        }
+								   //  $(xData.responseXML).find("Web").each(function(){
+								  	$('#dvLoadingN').SPServices({
+										 operation: "GetListCollection",
+										// webURL: $(this).attr("Url"),
+										 webURL: projOrNotificationSiteURL  ,
+										 async:false,
+										 completefunc: function(xData, Status) {
+										  $(xData.responseXML).find("List").each(function(){
+									  if($(this).attr("Title") == "FCM Workflow Stages") {
+									        
+											   $('#dvLoadingN').SPServices({
+											    operation: "GetListItems",
+											    webURL: $(this).attr("WebFullUrl"),
+											    async: false,
+											    listName: $(this).attr("Title"),
+											    CAMLViewFields: "<ViewFields><FieldRef Name='Title' /><FieldRef Name='Id' /><FieldRef Name='Date_x0020_Completed' /></ViewFields>",
+											     CAMLQuery:  "<Query><Where><Eq><FieldRef Name='Title'/><Value Type='text'>Close Out</Value></Eq></Where></Query>",
+								                            // "<Query><Where><And><Geq><FieldRef Name='Date_x0020_Completed' /><Value Type='DateTime'>" + startDate + "</Value></Geq><Leq><FieldRef Name='Date_x0020_Completed' /><Value Type='DateTime'>" + endDate + "</Value></Leq></And></Where></Query>"
+											     completefunc: function (xData, Status) {
+											     $(xData.responseXML).SPFilterNode("z:row").each(function() {
+											    
+								                var dateCompleted="";
+								                var dateCompletedOp="";
+								                if($(this).attr('ows_Date_x0020_Completed')!=null)
+								                {
+									              var tempDateCompleted =$(this).attr('ows_Date_x0020_Completed');
+									              dateCompleted =moment(tempDateCompleted).format('MM/DD/YYYY');
+									             var dtTemp = dateCompleted .split("/");
+								                 dateCompletedOp= new Date(dtTemp[2], dtTemp[0] - 1, dtTemp[1]);
+								  	            }
+								                else
+								                {
+								                dateCompleted ="";
+								                }
+								                
+								            	var liHtml = "<tr class='ms-alternating'>"+
+											              //"<td class='ms-vb' style='border-style: solid; border-width: 1px; width: 113px; text-align: center;'>"+$(this).attr('ows_Title')+ "</td>"+
+											              "<td class='ms-vb' style='border-style: solid; border-width: 1px; width: 145px; text-align: center;'><a href='"+projOrNotificationSiteURL +"'>"+projectNumber+"</a></td>"+
+								     		              "<td class='ms-vb' style='border-style: solid; border-width: 1px; width: 145px; text-align: center;'>"+projectName+" </td>"+
+											              "<td class='ms-vb' style='width: 155px; height: 15px; border-top-style: solid; border-top-width: 1px; border-bottom-style: solid; border-bottom-width: 1px; text-align: center;' valign='top'>"  +dateCompleted + "</td>"+
+											              "<td class='ms-vb' style='border-style: solid; border-width: 1px; width: 106px; text-align: center;'>"+siteColumn+" </td>"+
+											              "<td class='ms-vb' style='border-style: solid; border-width: 1px; width: 145px; text-align: center;'>"+unitColumn+"</td></tr>";
+								
+								    
+								    if(dateCompleted !="")
+								          {
+								    	          //Initial Condition                 
+										          if(  (fromDate ==null || fromDate == "Invalid Date"|| fromDate == "NaN")  && (toDate ==null || toDate== "Invalid Date" || toDate=="NaN") )
+										          {
+										          
+										           $("#allFMCProjectItemsNotification").append(liHtml);
+										          }  
+										          //If Start date and End Date are provided in the filter
+										           else if(fromDate <=   dateCompletedOp && toDate >=   dateCompletedOp)
+										           {
+											       $("#allFMCProjectItemsNotification").append(liHtml);
+											       }         
+										          //If Only Start Date is Provided
+										          else if(  (fromDate <=   dateCompletedOp) && (toDate ==null || toDate== "Invalid Date" || toDate=="NaN") )
+										           {
+											       $("#allFMCProjectItemsNotification").append(liHtml);
+											       }
+										          //If Only End Date is Provided
+										          else if( (toDate >=   dateCompletedOp) && (fromDate ==null || fromDate == "Invalid Date"|| fromDate == "NaN") )
+										           {
+											       $("#allFMCProjectItemsNotification").append(liHtml);
+									       		 }
+									   }
+								         
+								      });
+								     }
+								    });
+								   }
+								  })
+								   $('#dvLoadingN').hide();
+								 }
+								});
+								//})
+								 });
+								 }
+								});
+			}
+			})
+}
+</script>
+<title></title></head>
+
+

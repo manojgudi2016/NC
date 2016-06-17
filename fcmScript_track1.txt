@@ -1,0 +1,93 @@
+<style>
+.workflowStage {
+	MARGIN-BOTTOM: 10px; BORDER-TOP: black 2px solid; HEIGHT: 10px; BORDER-RIGHT: black 2px solid; WIDTH: 60px; BORDER-BOTTOM: black 2px solid; FLOAT: left; COLOR: black; PADDING-BOTTOM: 5px; TEXT-ALIGN: left; PADDING-TOP: 10px; FONT: bold 10px arial; PADDING-LEFT: 10px; BORDER-LEFT: black 2px solid; DISPLAY: inline-block; PADDING-RIGHT: 1px; BACKGROUND-COLOR: #a5a5a4; MARGIN-RIGHT: 5px; border-radius: 5px
+}
+.completed {
+	BACKGROUND-COLOR: #8db3e2
+}</style><script>
+
+
+
+    ExecuteOrDelayUntilScriptLoaded(retrieveListItems, "sp.js");
+    //_spBodyOnLoadFunctionNames.push("retrieveListItems");
+    /*$( document ).ready(function() {
+       retrieveListItems();
+    });*/
+
+    function retrieveListItems() {
+
+        var clientContext = new SP.ClientContext.get_current();
+        var oList = clientContext.get_web().get_lists().getByTitle('FCM Workflow Stages');
+
+        var camlQuery = new SP.CamlQuery();
+        camlQuery.set_viewXml('<View><Query><OrderBy><FieldRef Name="RC_x0020_Approved"/></OrderBy><Where><IsNotNull><FieldRef Name="RC_x0020_Approved"/></IsNotNull></Where></Query></View>');
+                        
+        this.collListItem = oList.getItems(camlQuery);
+
+        clientContext.load(collListItem);
+
+        clientContext.executeQueryAsync(Function.createDelegate(this, this.onQuerySucceeded), Function.createDelegate(this, this.onQueryFailed));
+
+    }
+
+    function onQuerySucceeded(sender, args) {
+
+        var listItemInfo = '';
+        var url = "http://ishareqa.novachem.com/projects/sites/eng/trk0/Lists/FCM%20Workflow%20Stages/DispForm.aspx?ID=";
+        var listItemEnumerator = collListItem.getEnumerator();
+
+        while (listItemEnumerator.moveNext()) {
+            var oListItem = listItemEnumerator.get_current();
+            var id = oListItem.get_id();
+            var title = oListItem.get_item('Title');
+			var status =oListItem.get_item('Status');
+
+        if(title=='LPS 9.6,LPS 9.4-9.5' || title=='LPS 9.4-9.5,LPS 9.6')
+	{
+			if(status=="Completed")
+            listItemInfo += "<div class='workflowStage completed'>LPS 9.4-9.5</div><div class='workflowStage completed'>LPS 9.6</div>";
+			else
+			listItemInfo += "<div class='workflowStage'>LPS 9.4-9.5</div><div class='workflowStage'>LPS 9.6</div>";	
+	}
+       else if(title=='LPS 9.4-9.5' || title=='LPS 9.6')
+	{
+
+		if(title=='LPS 9.4-9.5')
+			{
+			if(status=="Completed")
+		            listItemInfo += "<div class='workflowStage completed'>LPS 9.4-9.5</div><div class='workflowStage'>LPS 9.6</div>";
+			else
+			listItemInfo += "<div class='workflowStage'>LPS 9.4-9.5</div><div class='workflowStage'>LPS 9.6</div>";	
+ 			}
+		if(title=='LPS 9.6')
+			{
+			if(status=="Completed")
+		            listItemInfo += "<div class='workflowStage'>LPS 9.4-9.5</div><div class='workflowStage completed'>LPS 9.6</div>";
+			else
+			listItemInfo += "<div class='workflowStage'>LPS 9.4-9.5</div><div class='workflowStage'>LPS 9.6</div>";	
+ 			}
+	}
+
+	else
+	{
+
+			if(status=="Completed")
+            listItemInfo += "<div class='workflowStage completed'>" + title + "</div>";
+			else
+			listItemInfo += "<div class='workflowStage'>" + title + "</div>";	
+
+	}
+
+        }
+        //$('#WorkflowStage').html(listItemInfo);
+        document.getElementById("WorkflowStage").innerHTML = listItemInfo;
+		        //alert(listItemInfo.toString());
+    }
+
+    function onQueryFailed(sender, args) {
+
+        alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+    }
+	
+	
+	</script><div id="WorkflowStage"></div>

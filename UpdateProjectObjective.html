@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+    <title>Edit Project Objective</title>
+
+<script src="../SiteAssets/jquery-1.12.4.min.js" type="text/javascript">
+</script>
+    <script type='text/javascript'>
+        var masterProjectObjective="";
+        var currentProjectObjective="";
+        var rootSiteURL ='/projects/sites/eng/';
+        var  url = window.location.href;
+ 		var projectNumberFromURL = url.substring(url.indexOf('/sites/eng')+11).split('/')[0];
+ 		var masterMPLObjective="";
+        var currentMPLObjective="";
+        var masterMPLItemId =0;
+
+         ExecuteOrDelayUntilScriptLoaded(readyFunction, 'sp.js'); 
+
+        
+         function readyFunction() {
+         readCurrentSiteProjectListItem();
+         setTimeout(readMasterProjectListItem,2000);
+         }
+         
+         
+           //Read Current Site Project List Items 
+         function readCurrentSiteProjectListItem() {
+           var context =  new SP.ClientContext.get_current();
+           var web= context.get_web();  //Get Current Site which is a subsite
+ 
+            var currentList = web.get_lists().getByTitle('Master Project List');
+            var camlString =
+                "<View><ViewFields>" +
+                    "<FieldRef Name='Id' />" +
+                    "<FieldRef Name='Title' />" +
+                    "<FieldRef Name='Project_x0023_' />" +
+                     "<FieldRef Name='Project_x0020_Objectives' />" +
+                "</ViewFields></View>";
+            var camlQuery = new SP.CamlQuery();
+            camlQuery.set_viewXml(camlString);
+            currentProjectObjective= currentList.getItems(camlQuery);
+            context.load(web);
+	        context.load(currentProjectObjective, 'Include(Id,Title,Project_x0023_,Project_x0020_Objectives)');
+            context.executeQueryAsync(
+                Function.createDelegate(this, successHandlerCurrent),
+                Function.createDelegate(this, errorHandler)
+            );
+
+        };
+                function successHandlerCurrent(data, req) {
+            var projectObjectiveHtml = '';
+            var enumerator = currentProjectObjective.getEnumerator();
+            while (enumerator.moveNext()) {
+                var resultItem = enumerator.get_current();
+			if(projectNumberFromURL   ==   resultItem.get_item('Project_x0023_'))
+			{
+     		  currentMPLObjective=	resultItem.get_item('Project_x0020_Objectives') ;
+     		}
+			}
+
+          }
+
+
+    //Read Master Project List Items
+        function readMasterProjectListItem() {
+           var context =  new SP.ClientContext(rootSiteURL);
+           var web= context.get_web();  
+ 
+            var masterList = web.get_lists().getByTitle('Master Project List');
+            var camlString =
+                "<View><ViewFields>" +
+                    "<FieldRef Name='Id' />" +
+                    "<FieldRef Name='Title' />" +
+                    "<FieldRef Name='Project_x0023_' />" +
+                     "<FieldRef Name='Project_x0020_Objectives' />" +
+                "</ViewFields></View>";
+            var camlQuery = new SP.CamlQuery();
+            camlQuery.set_viewXml(camlString);
+            masterProjectObjective= masterList.getItems(camlQuery);
+            context.load(web);
+	        context.load(masterProjectObjective, 'Include(Id,Title,Project_x0023_,Project_x0020_Objectives)');
+            context.executeQueryAsync(
+                Function.createDelegate(this, successHandler),
+                Function.createDelegate(this, errorHandler)
+            );
+
+        };
+        function successHandler(data, req) {
+            var projectObjectiveHtml = '';
+            var enumerator = masterProjectObjective.getEnumerator();
+            while (enumerator.moveNext()) {
+                var resultItem = enumerator.get_current();
+			if(projectNumberFromURL   ==   resultItem.get_item('Project_x0023_'))
+			{
+      		  masterMPLObjective  =	resultItem.get_item('Project_x0020_Objectives') ;
+      		   masterMPLItemId = resultItem.get_id();
+            }
+            
+		}
+ 		if($(masterMPLObjective).text().trim()==$(currentMPLObjective).text().trim())
+	 	    {
+	 	       // updateListItem(currentMPLObjective);
+	 	       console.log(masterMPLObjective);
+	 	    }
+           
+        }
+
+
+        function errorHandler(data, error) {
+            alert('failure');
+           }
+        
+        
+        //Updating Master Project List item that matches project number        
+        
+        function updateListItem(currentMPLObjective) {
+        
+	    var clientContext = new SP.ClientContext(rootSiteURL);
+	    var oList = clientContext.get_web().get_lists().getByTitle('Master Project List');
+	
+	    this.oListItem = oList.getItemById(masterMPLItemId ); //Find the ID from the Read Operation
+	    var updatedObjective =''; //Read this value from a text box, having ID ='txtProjObjective'
+        oListItem.set_item('Project_x0020_Objectives', currentMPLObjective);
+	    oListItem.update();
+	    
+	
+	    clientContext.executeQueryAsync(
+        Function.createDelegate(this, this.onQuerySucceeded), 
+        Function.createDelegate(this, this.onQueryFailed)
+    );
+		}
+					function onQuerySucceeded() {
+			   // alert('Item updated!');
+			}
+			
+			function onQueryFailed(sender, args) {
+			    alert('Request failed. ' + args.get_message() + 
+			        '\n' + args.get_stackTrace());
+			}
+    </script>
+
+</head>
+<body>
+
+</body>
+</html>

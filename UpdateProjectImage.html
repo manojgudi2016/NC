@@ -1,0 +1,118 @@
+﻿<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+
+<script type="text/javascript">
+	
+	 var  url = window.location.href;
+     var projectNo = url.split('/sites/eng/')[1].split('/')[0];
+    
+     ExecuteOrDelayUntilScriptLoaded(retrieveProjWFTaskListItems, "sp.js");
+        
+     function retrieveProjWFTaskListItems() {
+      
+       var clientContext = new SP.ClientContext.get_current();
+       var web = clientContext.get_web();
+
+         //Query FCM WF Stages   
+    	 var FCMList = web.get_lists().getByTitle('FCM Workflow Stages');
+		 var query = new SP.CamlQuery();
+         query.set_viewXml('<View><Query><OrderBy><FieldRef Name="order0" Ascending = "FALSE"/></OrderBy><Where><Leq><FieldRef Name="RC_x0020_Approved"/><Value Type="Number">10</Value></Leq></Where></Query></View>');	     
+    	 this.FCMItems= FCMList.getItems(query );
+	     clientContext.load(FCMItems);		        
+		
+		//Query Project WF Stages
+        var ProjList = web.get_lists().getByTitle('Project Workflow Stages');
+        var camlQuery = new SP.CamlQuery();
+        camlQuery.set_viewXml('<View><Query><Where><Eq><FieldRef Name="PDIAppro"/><Value Type="Number">16</Value></Eq></Where></Query></View>');
+        //camlQuery.set_viewXml ('<View><ViewFields><FieldRef Name=\'ID\' /><FieldRef Name=\'Title\' /><FieldRef Name=\'PDIAppro\' /></ViewFields></View>' );
+        this.collProjListItem = ProjList.getItems(camlQuery);
+        //this.collListItem = oList.getItems();
+        clientContext.load(collProjListItem );
+        clientContext.executeQueryAsync(Function.createDelegate(this, this.onProjQuerySucceeded), Function.createDelegate(this, this.onProjQueryFailed));
+    }
+
+    function onProjQuerySucceeded(sender, args) {
+        var tempAllApprovedTitles="";
+        var isFCMStartUpCompleted = false;
+        
+        var FCMItemsEnum = FCMItems.getEnumerator();
+        while (FCMItemsEnum .moveNext()) {
+                var oListItem = FCMItemsEnum.get_current();
+                var id = oListItem.get_id();
+	            var title = oListItem.get_item('Title');
+				var status =oListItem.get_item('Status');
+				if(title == "Start-Up"  && status=="Completed")
+				{ 
+				  isFCMStartUpCompleted =true;
+				}
+            }
+            
+    
+        var listItemEnumerator = collProjListItem .getEnumerator();
+        while (listItemEnumerator.moveNext()) {
+            var oListItem = listItemEnumerator.get_current();
+            var Id = oListItem.get_id();
+            var Title = oListItem.get_item('Title');
+         	var BProjectApproval =oListItem.get_item('PDIAppro');
+         	if(BProjectApproval==16 )//16 = "Approved"
+         	{
+         	 tempAllApprovedTitles=tempAllApprovedTitles + Title + "#";
+         	}
+           }
+         
+        //This logic may be different for different tracks, this logic applies for Track 4 only        
+        if(tempAllApprovedTitles.length > 0)
+        {
+          if(tempAllApprovedTitles.indexOf('SharePoint Site Closeout') >= 0)
+          {
+			document.getElementById('imgProjWfStages').src="/projects/sites/eng/"+projectNo +"/SiteAssets/PD_I/Closeout.png";             
+          }
+          
+          else if(isFCMStartUpCompleted )
+          {
+			document.getElementById('imgProjWfStages').src="/projects/sites/eng/"+projectNo +"/SiteAssets/PD_I/projectCloseout.png";             
+          }
+         
+          else if(tempAllApprovedTitles.indexOf('EDS')>= 0)
+          {
+			document.getElementById('imgProjWfStages').src="/projects/sites/eng/"+projectNo +"/SiteAssets/PD_I/EDS.png";             
+          }
+		  else if(tempAllApprovedTitles.indexOf('DBM')>= 0)
+          {
+			document.getElementById('imgProjWfStages').src="/projects/sites/eng/"+projectNo +"/SiteAssets/PD_I/DBM.png";             
+          }
+          else if(tempAllApprovedTitles.indexOf('AER')>= 0)
+          {
+			document.getElementById('imgProjWfStages').src="/projects/sites/eng/"+projectNo +"/SiteAssets/PD_I/AER.png";             
+          }
+        }
+        else
+        { 
+		document.getElementById('imgProjWfStages').src="/projects/sites/eng/"+projectNo +"/SiteAssets/PD_I/Pre%20AER.png";
+		}
+		document.getElementById('ancViewProjWFStages').href="/projects/sites/eng/"+projectNo +"/Lists/Project%20Workflow%20Stages";
+  }
+
+    function onProjQueryFailed(sender, args) {
+        alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+    }
+	</script>
+
+
+<title>UpdateProjectImage</title>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:FSObjType msdt:dt="string">0</mso:FSObjType>
+<mso:Order msdt:dt="string">14600.0000000000</mso:Order>
+<mso:FileDirRef msdt:dt="string">projects/sites/eng/Track4/SiteAssets</mso:FileDirRef>
+<mso:ContentTypeId msdt:dt="string">0x010100E0D83936C258F747958044C6BE311628</mso:ContentTypeId>
+<mso:ContentType msdt:dt="string">Document</mso:ContentType>
+<mso:FileLeafRef msdt:dt="string">UpdateProjectImage.html</mso:FileLeafRef>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+<img border="0" id="imgProjWfStages" src="/_layouts/images/gears_anv4.gif" alt="">
+<p>&nbsp;&nbsp;View <a id="ancViewProjWFStages" href="#">Project Workflow Stages</a> </p>
+</body>
+</html>

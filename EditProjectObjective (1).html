@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+    <title>EditProjectObjective</title>
+
+
+  <!--      <script src='Scripts/jquery-1.10.2.js'></script>
+<script src='Scripts/SPScripts/MicrosoftAjax.js'></script>
+    <script src='Scripts/SPScripts/SP.js'></script>
+    <script src='Scripts/SPScripts/SP.RequestExecutor.js'></script>
+    <script src='Scripts/SPScripts/SP.Runtime.js'></script>-->
+
+    
+
+    <!--Read List Items-->
+    <script type='text/javascript'>
+        var projectObjective="";
+        var rootSiteURL ='/projects/sites/eng/';
+        var  url = window.location.href;
+ 		var projectNumberFromURL = url.substring(url.indexOf('/sites/eng')+11).split('/')[0];
+    
+    	 ExecuteOrDelayUntilScriptLoaded(readListItems, 'sp.js');
+        function readListItems() {
+           var context =  new SP.ClientContext(rootSiteURL);
+           var web= context.get_web();  //Get Current Site which is a subsite
+ 
+            var list = web.get_lists().getByTitle('Master Project List');
+            var camlString =
+                "<View><ViewFields>" +
+                    "<FieldRef Name='Id' />" +
+                    "<FieldRef Name='Title' />" +
+                    "<FieldRef Name='Project_x0023_' />" +
+                     "<FieldRef Name='Project_x0020_Objectives' />" +
+                "</ViewFields></View>";
+            var camlQuery = new SP.CamlQuery();
+            camlQuery.set_viewXml(camlString);
+            projectObjective= list.getItems(camlQuery);
+            context.load(web);
+	        context.load(projectObjective, 'Include(Id,Title,Project_x0023_,Project_x0020_Objectives)');
+            context.executeQueryAsync(
+                Function.createDelegate(this, successHandler),
+                Function.createDelegate(this, errorHandler)
+            );
+
+        };
+
+        function successHandler(data, req) {
+            var projectObjectiveHtml = '';
+            var enumerator = projectObjective.getEnumerator();
+            while (enumerator.moveNext()) {
+                var resultItem = enumerator.get_current();
+			if(projectNumberFromURL   ==   resultItem.get_item('Project_x0023_'))
+			{
+//		                projectObjectiveHtml = projectObjectiveHtml +
+//		                    '<p><h1>' + resultItem.get_item('Title') +
+//		                    '</h1>' + resultItem.get_item('Project_x0023_') +
+//		                    '</h1>' + resultItem.get_item('Project_x0020_Objectives') +
+//		                    '</p><hr/>';
+                   //projectObjectiveHtml = "<table width='100%' border='0' cellspacing='0' cellpadding='1' class='ms-listviewtable ms-basictable' ><tbody><tr setedgeborder='true'><td class='ms-vb-itmcbx ms-vb-firstCell'><td class='ms-vb2 ms-vb-lastCell'><div><p>"+ resultItem.get_item('Project_x0020_Objectives') +"</p></div></td></tr></tbody></table>";
+         projectObjectiveHtml =  "<table summary='Master Project List ' width='100%' border='0' cellspacing='0' dir='none' onmouseover='EnsureSelectionHandler(event,this,101)' cellpadding='1' id='{7821FE2F-F75F-4867-9F8E-F3A8D67E39FB}-{DCB1C304-FD20-4DC7-9BCC-A3AEA7507620}' class='ms-listviewtable ms-basictable' ><tbody><tr valign='top' class='ms-viewheadertr ms-vhltr'><th class='ms-vh-icon' scope='col'></th><th nowrap='' scope='col' onmouseover='OnChildColumn(this)' class='ms-vh2'><div sortable='FALSE' sortdisable='' filterdisable='' filterable='FALSE' filterdisablemessage='' name='Project_x0020_Objectives' ctxnum='101' displayname='Project Objectives' fieldtype='Note' resulttype=''  class='ms-vh-div'>Project Objectives</div></th></tr><tr class='ms-itmhover' iid='101,3,0' setedgeborder='true'><td class='ms-vb-itmcbx ms-vb-firstCell'></td><td class='ms-vb2 ms-vb-lastCell'><div><div><p>"+ resultItem.get_item('Project_x0020_Objectives') +"</p></div></div></td></tr></tbody></table>";
+
+		            }
+			}
+
+            document.getElementById('divProjectObj').innerHTML = projectObjectiveHtml ;
+        }
+
+        function errorHandler(data, error) {
+            alert('failure');
+            document.getElementById('divProjectObj').innerText =
+                'Could not complete cross domain call: ' + args.get_message();
+        }
+        
+        
+        
+        function updateListItem(rootSiteURL ) {
+	    var clientContext = new SP.ClientContext(rootSiteURL);
+	    var oList = clientContext.get_web().get_lists().getByTitle('Master Project List');
+	
+	    this.oListItem = oList.getItemById(0); //Find the ID from the Read Operation
+	    var updatedObjective =''; //Read this value from a text box, having ID ='txtProjObjective'
+	    oListItem.set_item('Project_x0020_Objectives', '');
+	    oListItem.update();
+	
+	    clientContext.executeQueryAsync(
+        Function.createDelegate(this, this.onQuerySucceeded), 
+        Function.createDelegate(this, this.onQueryFailed)
+    );
+		}
+					function onQuerySucceeded() {
+			   // alert('Item updated!');
+			}
+			
+			function onQueryFailed(sender, args) {
+			    alert('Request failed. ' + args.get_message() + 
+			        '\n' + args.get_stackTrace());
+			}
+    </script>
+
+</head>
+<body>
+    <div id='divProjectObj'>
+    </div>
+</body>
+</html>

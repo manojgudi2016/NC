@@ -1,0 +1,90 @@
+﻿<html>
+<head>
+<script type="text/javascript" src="http://ishare.novachem.com/projects/sites/eng/SiteAssets/jquery-1.12.3.min.js"></script>
+<script type="text/javascript" src="http://ishare.novachem.com/projects/sites/eng/SiteAssets/jquery.SPServices.min.js"></script>
+<!--http://stackoverflow.com/questions/33803268/ecmascript-callback-method-executed-after-presaveaction-method-->
+<script language="javascript" type="text/javascript">
+
+
+//_spBodyOnLoadFunctionNames.push("GetAllSPGroupsAndTheirUserCount");
+//_spBodyOnLoadFunctionNames.push("InitializePageCode");
+
+//ExecuteOrDelayUntilScriptLoaded(InitializePageCode,"SP.JS");
+
+function InitializePageCode()
+{
+ $('.ms-listviewtable tr td a:contains("Start")').each(function() 
+   {
+      var thisAnc=$(this);
+     	thisAnc.parent().siblings().each(function()
+		{
+             if($(this).attr('class')=="ms-vb-user")
+				{
+				  var spGroupId = $(this).find('a').attr('href').split('=')[1];				  
+  				  //Find the users count in the groupname 
+  				  var returnValue= retrieveAllUsersInGroup(spGroupId);
+  				}
+		});  
+		   });
+ }
+
+function InitializePageCodePost()
+{
+
+   $('.ms-listviewtable tr td a:contains("Start")').each(function() 
+   {
+      var thisAnc=$(this);
+      $(this).click(function() {    
+    	thisAnc.parent().siblings().each(function()
+		{
+             if($(this).attr('class')=="ms-vb-user")
+				{
+  				  var spGroupName = $(this).text();
+  				  //Find the users count in the groupname 
+  				  //var returnValue= retrieveAllUsersInGroup(2836);
+  				  //retrieveAllUsersInGroup(2836);
+				}
+		});   
+      });      
+    });
+ }
+		
+//var siteUrl = '/sites/MySiteCollection ';
+function retrieveAllUsersInGroup(spGroupName) {
+    //var clientContext = new SP.ClientContext(siteUrl);
+	var clientContext = new SP.ClientContext.get_current();
+    var collGroup = clientContext.get_web().get_siteGroups();
+    var oGroup = collGroup.getById(spGroupName );
+    this.collUser = oGroup.get_users();
+    clientContext.load(collUser);
+    clientContext.executeQueryAsync(Function.createDelegate(this, this.onQuerySucceeded), Function.createDelegate(this, this.onQueryFailed));
+}
+
+function onQuerySucceeded() {
+
+   var returnVal =false;
+    var userInfo = '';
+    
+    var userEnumerator = collUser.getEnumerator();
+    
+    if(userEnumerator.moveNext()==true) {
+       returnVal =true;
+      }
+      else
+      {
+         alert('The Group is not having any users!');
+         returnVal =false;
+      }
+      return returnVal ;
+  }
+
+function onQueryFailed(sender, args) {
+    alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+}
+</script>
+<title></title></head>
+
+
+
+
+

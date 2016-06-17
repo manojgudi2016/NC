@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Show Site Image</title>
+<script src="/projects/sites/eng/SiteAssets/jquery-1.12.3.min.js"></script>
+
+<script type="text/javascript">
+
+ExecuteOrDelayUntilScriptLoaded(loadSlideImages, "sp.js");
+//Recommended to define this fun First 
+
+function onQuerySucceeded(sender, args) {
+		var listItemInfo = '';
+		var listItemEnumerator = frontPictureItems.getEnumerator();
+		var listItems = '';
+		while (listItemEnumerator.moveNext()) {
+		var oListItem = listItemEnumerator.get_current();
+		listItems += '<img src="http://sp:1000/student/iin/MySlider1/' + oListItem.get_displayName() + '.jpg" style="position:absolute" height="300px" width="900px"/>';
+}
+
+$('#imgCntr').html(listItems);
+	initSlider();
+}
+
+function onQueryFailed(sender, args) {
+		alert('Request failed. ' + args.get_message() + 'n' + args.get_stackTrace());
+}
+
+function initSlider() {
+		$('#imgCntr img:gt(0)').hide();
+		setInterval(function(){$('#imgCntr :first-child').fadeOut().next('img').fadeIn().end().appendTo('#imgCntr');}, 6000);
+}
+
+	var siteUrl='http://sp:1000/student/iin';
+	//i have taken static URL here you can used Absolute URL as well
+
+	function loadSlideImages() {
+		var clientContext = new SP.ClientContext.get_current();
+		var oList = clientContext.get_web().get_lists().getByTitle('SiteImageGallery');//get PicLibrary
+	
+		var camlQuery = SP.CamlQuery.createAllItemsQuery();
+	//you can use caml syntax to get desire result i have Just take all field
+	   		
+		this.frontPictureItems = oList.getItems(camlQuery);
+		clientContext.load(frontPictureItems, 'Include(Id,DisplayName,FileLeafRef,FileDirRef)');
+		//load neccessary Field to load image
+	
+		clientContext.executeQueryAsync(
+		 Function.createDelegate(this, this.onQuerySucceeded),
+		 Function.createDelegate(this, this.onQueryFailed));
+}
+
+</script>
+</head>
+
+<body>
+<table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+			<tbody><tr>
+				<td align="center" valign="middle" style="background-color:transparent">
+				<img border="0" id="imgSiteImage" src="../SiteImageGallery/Joffre Site Enviro.JPG" alt="" />
+				</td>
+			</tr>
+		</tbody></table>
+</body>
+
+</html>

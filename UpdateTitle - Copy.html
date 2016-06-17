@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+    <title>Update Title(Project Library Based)</title>
+  
+<script src="https://code.jquery.com/jquery-1.12.3.min.js" type="text/javascript"></script>
+
+    <script type='text/javascript'>
+        var  url = window.location.href;
+        var destURL = decodeURIComponent(url.split('RootFolder=')[1].split('&')[0]);
+        var projectNo = url.split('/sites/eng/')[1].split('/')[0];
+        var sourceURL = "/sites/eng/"+projectNo+ "/projectlib/";
+       
+		var sourceItems = ""; //From project Library
+		var destItems = "";   //Of the current folder under Project Consolidated reports
+	    var collListItemToBeUpdated = "";
+
+    	   ExecuteOrDelayUntilScriptLoaded(getFilesInFolderSource, 'sp.js');
+    	   
+    	   ExecuteOrDelayUntilScriptLoaded(getFilesInFolderDest, 'sp.js');
+    	   
+    	   setTimeout(function() { UpdateTitleAtDestination(); }, 3000);    	   
+
+//Read Project Library Files    	 
+function getFilesInFolderSource() {   
+		        var context = SP.ClientContext.get_current();
+		        var web = context.get_web();
+		        var list = web.get_lists().getByTitle('Project Library');
+				var query = SP.CamlQuery.createAllItemsQuery();
+				allItems = list.getItems(query);
+				context.load(allItems , 'Include(File, FileSystemObjectType)');
+		        context.executeQueryAsync(Function.createDelegate(this, this.OnSuccessSource), Function.createDelegate(this, this.OnFailure));
+}
+		    function OnSuccessSource()
+		    {                                              
+		   	      sourceItems = allItems.getEnumerator(); //Get all files of the consolidated reports folder (i.e. CWP, ECN etc)
+		   	      console.log("getFilesInFolderSource");
+		    }
+		
+//Read the consolidated reports current folder files  
+function getFilesInFolderDest() {   
+		    var context = SP.ClientContext.get_current();
+     	     var web = context.get_web();
+		    var list = web.get_lists().getByTitle('Project Consolidated Reports');
+		    
+		    var query = SP.CamlQuery.createAllItemsQuery();
+	        query.set_folderServerRelativeUrl(destURL);
+	        
+	        allItemsD = list.getItems(query);
+	        context.load(allItemsD , 'Include(File, FileSystemObjectType)');		        
+		        
+		        var web = context.get_web();
+		        var folder = web.getFolderByServerRelativeUrl(destURL); 
+		        files = folder.get_files();
+		        context.load(files);
+		        context.executeQueryAsync(Function.createDelegate(this, this.OnSuccessDest), Function.createDelegate(this, this.OnFailure));
+}
+		    function OnSuccessDest()
+		    {                                              
+		         destItems = files.getEnumerator(); //Get all files of the consolidated reports folder (i.e. CWP, ECN etc)
+		         console.log("getFilesInFolderDest");
+		    }
+	
+	
+		    function OnFailure(sender, args) {
+		 	       alert("Failed. Message:" + args.get_message());
+		    }        
+  
+//After getting source and destination items, lookup source list with destination items whose title is null and update the destination item.
+			function UpdateTitleAtDestination()
+			{
+			console.log("UpdateTitleAtDestination");
+			if(destItems !="")
+			{
+						while(destItems .moveNext())
+						        {
+						            var currentDestItem = destItems.get_current();                                                                                                                     
+						            if(currentDestItem .get_title()== "") //Finding a record in destination folder whose file's title is empty
+						            {
+						              console.log(currentDestItem .get_name().split('_')[0]);
+						                  if(sourceItems !="")
+										      {
+													while(sourceItems.moveNext())
+													        {
+													            var currentSourceItem = sourceItems.get_current();
+													            
+													            var filename1= currentSourceItem .get_file().get_name();
+													            var output = filename1.substr(0, filename1.lastIndexOf('.')) || filename1; 
+													             if( output == currentDestItem .get_name().split('_')[0])
+													               {
+													                  console.log(currentSourceItem.get_file().get_title());
+																	
+																	//currentDestItem .set_item('Title',currentSourceItem.get_file().get_title());
+																	var tr =$('.ms-vb-title').parent();
+																	$("tr td:nth-child(6)").text(currentSourceItem.get_file().get_title());
+																	     
+													               }
+													               
+													        }
+												}   
+						            }
+						        }
+			}
+			}
+			
+			
+
+			
+		    </script>
+
+</head>
+<body>
+    <div id='divProjectObj'>
+    </div>
+</body>
+</html>

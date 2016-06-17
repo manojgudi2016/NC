@@ -1,0 +1,111 @@
+﻿<html>
+<head>
+<script type="text/javascript" src="http://ishare.novachem.com/projects/sites/eng/SiteAssets/jquery-1.12.3.min.js"></script>
+<script type="text/javascript" src="http://ishare.novachem.com/projects/sites/eng/SiteAssets/jquery.SPServices.min.js"></script>
+<script type="text/javascript" src="http://ishare.novachem.com/projects/sites/eng/SiteAssets/moment.js"></script>
+<!--http://stackoverflow.com/questions/33803268/ecmascript-callback-method-executed-after-presaveaction-method-->
+  
+    <!--Read Current Site MPL List Items to get Site details-->
+    <script type='text/javascript'>
+        var currentSite ="";
+        //var rootSiteURL ='/projects/sites/eng/';
+        var  url = window.location.href;
+ 		var projectNumberFromURL = url.substring(url.indexOf('/sites/eng')+11).split('/')[0];
+  
+      	ExecuteOrDelayUntilScriptLoaded(readCurrentSiteMPLListItems, 'sp.js');  //Read MPL List
+      	
+        function readCurrentSiteMPLListItems() {
+           var context =  new SP.ClientContext.get_current();
+           var web= context.get_web();  //Get Current Site which is a subsite
+ 
+            var list = web.get_lists().getByTitle('Master Project List');
+            var camlString =
+                "<View><ViewFields>" +
+                    "<FieldRef Name='Id' />" +
+                    "<FieldRef Name='Title' />" +
+                    "<FieldRef Name='Notification_x0023_' />" +
+                     "<FieldRef Name='Site' />" +
+                         "<FieldRef Name='Created' />" +
+                "</ViewFields></View>";
+              
+            var camlQuery = new SP.CamlQuery();
+            camlQuery.set_viewXml(camlString);
+            projectObjective= list.getItems(camlQuery);
+            context.load(web);
+	        context.load(projectObjective, 'Include(Id,Title,Notification_x0023_,Site,Created)');
+            context.executeQueryAsync(
+                Function.createDelegate(this, successHandler),
+                Function.createDelegate(this, errorHandler)
+            );
+
+        };
+
+        function successHandler(data, req) {
+            var enumerator = projectObjective.getEnumerator();
+            while (enumerator.moveNext()) 
+            {
+                var resultItem = enumerator.get_current();
+			if(projectNumberFromURL   ==   resultItem.get_item('Notification_x0023_'))
+				{
+				   currentSite  = resultItem.get_item('Site');
+				   var createdDate =resultItem.get_item('Created').format('MM/dd/yyyy');
+				   
+				  if( ("2009-Joffre Ethylene 2,2004 Corunna,2006 SCRS,2007 Moore,2019 Surplus - CO").indexOf(currentSite)>=0)
+				  {
+
+				   $('.ms-listviewtable tr td a:contains("OHSA")').each(function() 
+					   { 
+					    var cycleTimeDays =0;
+				   		$(this).closest('tr').find('td:eq(3)').text(createdDate);
+				   						   		 
+					       //Find the date completed.
+					       var dateCompleted = $(this).closest('tr').find('td:eq(4)').text();
+					       if(dateCompleted !='')
+					       {
+					       var a = moment(createdDate, 'MM/DD/YYYY');
+						   var b = moment(dateCompleted , 'MM/DD/YYYY');
+			               var days = b.diff(a, 'days');
+//                		   $(this).closest('tr').find('td:eq(7)').text(days);
+                		   $(this).closest('tr').find('td:eq(7)').find('div').text(days) 
+						   }
+                         //Find the difference between dateCompleted and CreatedDate, assign it to 7th column					    
+					  	});
+				  }
+				  if( ("2011 Painesville,2012 Beaver Valley,2008 E1,2009 E2,2010 PE1,2020 PE2,2108 NOVA Technical Center,2115 Joffre Administration,2116 NOVA Research,2158 AEGS-AB Ethane Gath").indexOf(currentSite)>=0 )
+				  {
+					$('.ms-listviewtable tr td a:contains("RC Checklist")').each(function() 
+					   {
+					   
+					   var cycleTimeDays =0;
+				   		$(this).closest('tr').find('td:eq(3)').text(createdDate);
+				   						   		 
+					       //Find the date completed.
+					       var dateCompleted = $(this).closest('tr').find('td:eq(4)').text();
+					       if(dateCompleted !='')
+					       {
+					       var a = moment(createdDate, 'MM/DD/YYYY');
+						   var b = moment(dateCompleted , 'MM/DD/YYYY');
+			               var days = b.diff(a, 'days');
+//                		   $(this).closest('tr').find('td:eq(7)').text(days);
+                		   $(this).closest('tr').find('td:eq(7)').find('div').text(days) 
+
+					   }		
+						});
+					   }
+				}
+		    }
+		}
+
+        function errorHandler(data, error) {
+            alert('failure');
+            document.getElementById('divProjectObj').innerText =
+                'Could not complete cross domain call: ' + args.get_message();
+}
+</script>
+<title></title></head>
+
+
+
+
+
+

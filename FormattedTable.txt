@@ -1,0 +1,21 @@
+<table border="0" width="100%" cellpadding="2" cellspacing="0" style="border-left-width: 0px; border-right-width: 0px;" >
+<tbody>
+<tr valign="top">
+<th class="ms-vh" nowrap="" style="width: 113px; text-align: center; border-bottom-style: solid; border-bottom-width: 1px;">Title</th>
+<th class="ms-vh" nowrap="" style="width: 155px; text-align: center; border-bottom-style: solid; border-bottom-width: 1px;">Created</th>
+<th class="ms-vh" nowrap="" style="width: 106px; text-align: center; border-bottom-style: solid; border-bottom-width: 1px;">Date Completed</th>
+<th class="ms-vh" nowrap="" style="text-align: center; border-bottom-style: solid; border-bottom-width: 1px; width: 145px;">Project</th>
+</tr>
+<tr class="ms-alternating">
+
+<td class="ms-vb" style="border-style: solid; border-width: 1px; width: 113px; text-align: center;"><a href="http://ishare.novachem.com/projects/sites/eng/16088/Lists/FCM Workflow Stages/DispForm.aspx?ID=13">Close Out</a></td>
+<td class="ms-vb" style="width: 155px; height: 15px; border-top-style: solid; border-top-width: 1px; border-bottom-style: solid; border-bottom-width: 1px; text-align: center;" valign="top">4/13/2016</td>
+
+<td class="ms-vb" style="border-style: solid; border-width: 1px; width: 106px; text-align: center;"></td>
+
+<td class="ms-vb" style="border-style: solid; border-width: 1px; width: 145px; text-align: center;">16088</td>
+
+</tr>
+
+</tbody>
+</table>
